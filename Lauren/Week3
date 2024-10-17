@@ -26,25 +26,3 @@ matched_img = cv2.drawMatches(edges1, keypoints1, edges2, keypoints2, matches[:5
 cv2.imshow('Matches', matched_img)
 cv2.waitKey(0)
 cv2.destroyAllWindows()
-
-# Image Alignment using Affine or Homography transform
-# Find the transformation matrix using matched keypoints
-src_pts = np.float32([keypoints1[m.queryIdx].pt for m in matches]).reshape(-1, 1, 2)
-dst_pts = np.float32([keypoints2[m.trainIdx].pt for m in matches]).reshape(-1, 1, 2)
-
-
-M, _ = cv2.estimateAffinePartial2D(src_pts, dst_pts)
-
-# align second image with the first
-aligned_img2 = cv2.warpAffine(img2, M, (img1.shape[1], img1.shape[0]))
-
-# Structural Similarity
-similarity_score, diff = ssim(img1, aligned_img2, full=True)
-print(f'Structural Similarity Score: {similarity_score}')
-
-
-x, y, w, h = 100, 100, 50, 50  # Example ROI
-patch1 = img1[y:y+h, x:x+w]
-patch2 = aligned_img2[y:y+h, x:x+w]
-
-
