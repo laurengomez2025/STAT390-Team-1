@@ -1,3 +1,8 @@
+# In the code, we use ORB to detect and match keypoints between the two images. 
+# The matched keypoints estimate an affine transformation that aligns the second stained image to the first.
+# The visualization shows structural similarities between the images, where the colored
+ # lines show regions of interest that correspond between the two images.  
+
 import cv2
 import numpy as np
 from skimage.metrics import structural_similarity as ssim
