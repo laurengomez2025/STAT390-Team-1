@@ -9,8 +9,8 @@ from skimage.metrics import structural_similarity as ssim
 from skimage import io
 
 # Load two stained images; both H&E for the time being 
-img1 = cv2.imread('image1.png', 0)  # Image from stain 1
-img2 = cv2.imread('image2.png', 0)  # Image from stain 2
+img1 = cv2.imread('image_1.jpg', 0)  # Image from stain 1
+img2 = cv2.imread('image_2.jpg', 0)  # Image from stain 2
 
 # Edge Detection to highlight structural features
 edges1 = cv2.Canny(img1, 100, 200)
