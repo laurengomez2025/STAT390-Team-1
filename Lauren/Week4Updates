@@ -1,0 +1,89 @@
+#Using Noah's alg as a framework. Tried to incorporate "template matching" to see how results varied as from research, template matchig
+# is supposed to be helpful for comparing more than just the contours of an image. 
+
+
+import cv2
+import matplotlib.pyplot as plt
+import numpy as np
+
+
+def template_matching(img, template):
+    gray_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    gray_template = cv2.cvtColor(template, cv2.COLOR_BGR2GRAY)
+    result = cv2.matchTemplate(gray_img, gray_template, cv2.TM_CCOEFF_NORMED)
+    _, max_val, _, max_loc = cv2.minMaxLoc(result)
+    return max_val, max_loc
+
+def extract_main_contour(image):
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    blurred = cv2.GaussianBlur(gray, (5, 5), 0)
+    adaptive_thresh = cv2.adaptiveThreshold(blurred, 255,
+                                            cv2.ADAPTIVE_THRESH_GAUSSIAN_C, 
+                                            cv2.THRESH_BINARY_INV, 11, 2)
+    kernel = np.ones((15, 15), np.uint8)
+    morph = cv2.morphologyEx(adaptive_thresh, cv2.MORPH_CLOSE, kernel)
+    contours, _ = cv2.findContours(morph, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    if contours:
+        largest_contour = max(contours, key=cv2.contourArea)
+        x, y, w, h = cv2.boundingRect(largest_contour)
+        return image[y:y+h, x:x+w]  
+    return None
+
+
+def template_similarity(img1, img2):
+    if img1 is None or img2 is None:
+        return 0  # Return 0 if any image is invalid
+    max_val, _ = template_matching(img2, img1)  # Use img1 as the template
+    return max_val
+
+def similarity_matrix_single_set(image_set, names):
+    num_images = len(image_set)
+    matrix = np.zeros((num_images, num_images))
+
+    for i, img1 in enumerate(image_set):
+        img1_template = extract_main_contour(img1)
+
+        for j, img2 in enumerate(image_set):
+            if i == j:
+                matrix[i, j] = 1  
+            else:
+                img2_template = extract_main_contour(img2)
+                matrix[i, j] = template_similarity(img1_template, img2_template)
+
+
+    plt.imshow(matrix, cmap='Blues', interpolation='nearest')
+    plt.colorbar(label='Similarity Score')
+    plt.xticks(range(num_images), names)
+    plt.yticks(range(num_images), names)
+    plt.xlabel('Images')
+    plt.ylabel('Images')
+    plt.show()
+
+    return matrix
+
+
+def show_matches(matches):
+    for img1, img2 in matches:
+        _, ax = plt.subplots(1, 2)
+        ax[0].imshow(cv2.cvtColor(img1, cv2.COLOR_BGR2RGB))
+        ax[1].imshow(cv2.cvtColor(img2, cv2.COLOR_BGR2RGB))
+        plt.show()
+
+# Pipeline function to compare all images
+def pipeline(images, names):
+   
+    similarity = similarity_matrix_single_set(images, names)
+
+   
+    matches = []  
+    for i, img1 in enumerate(images):
+        best_match_idx = np.argmax(similarity[i, :])  # Find the best match for each image
+        if i != best_match_idx:
+            matches.append((img1, images[best_match_idx]))
+
+
+    show_matches(matches)
+
+    return similarity
+
+
