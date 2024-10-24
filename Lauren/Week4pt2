@@ -1,0 +1,13 @@
+# Potential update to this section of the code. Use cv2.RETR_TREE to handle holes in images better 
+
+def extract_main_contour(image):
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    blurred = cv2.GaussianBlur(gray, (5, 5), 0)
+    adaptive_thresh = cv2.adaptiveThreshold(blurred, 255,
+                                            cv2.ADAPTIVE_THRESH_GAUSSIAN_C, 
+                                            cv2.THRESH_BINARY_INV, 11, 2)
+    kernel = np.ones((15, 15), np.uint8)
+    morph = cv2.morphologyEx(adaptive_thresh, cv2.MORPH_CLOSE, kernel)
+
+    # Find all contours including holes (internal regions)
+    contours, hierarchy = cv2.findContours(morph, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
